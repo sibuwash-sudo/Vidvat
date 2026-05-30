@@ -58,7 +58,7 @@ function AdminLayout() {
                 return (
                   <Link
                     key={t.to}
-                    to={t.to}
+                    to={t.to as never}
                     className={`px-4 py-2.5 text-sm border-b-2 -mb-px transition-colors ${
                       active
                         ? "border-primary text-primary font-medium"
