@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
+import { useIsAdmin } from "@/lib/use-is-admin";
 import { Button } from "@/components/ui/button";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Shield } from "lucide-react";
 
 export function SiteHeader() {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   return (
     <header className="border-b border-border/60 bg-background/80 backdrop-blur sticky top-0 z-40">
