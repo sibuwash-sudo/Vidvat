@@ -12,8 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as PapersRouteImport } from './routes/papers'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PapersPaperIdRouteImport } from './routes/papers.$paperId'
+import { Route as AdminToppersRouteImport } from './routes/admin.toppers'
+import { Route as AdminThemesRouteImport } from './routes/admin.themes'
+import { Route as AdminTagsRouteImport } from './routes/admin.tags'
+import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
+import { Route as AdminPapersRouteImport } from './routes/admin.papers'
 
 const PapersRoute = PapersRouteImport.update({
   id: '/papers',
@@ -30,55 +37,141 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const PapersPaperIdRoute = PapersPaperIdRouteImport.update({
   id: '/$paperId',
   path: '/$paperId',
   getParentRoute: () => PapersRoute,
 } as any)
+const AdminToppersRoute = AdminToppersRouteImport.update({
+  id: '/toppers',
+  path: '/toppers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminThemesRoute = AdminThemesRouteImport.update({
+  id: '/themes',
+  path: '/themes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTagsRoute = AdminTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPapersRoute = AdminPapersRouteImport.update({
+  id: '/papers',
+  path: '/papers',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/papers': typeof AdminPapersRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/tags': typeof AdminTagsRoute
+  '/admin/themes': typeof AdminThemesRoute
+  '/admin/toppers': typeof AdminToppersRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/papers': typeof AdminPapersRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/tags': typeof AdminTagsRoute
+  '/admin/themes': typeof AdminThemesRoute
+  '/admin/toppers': typeof AdminToppersRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/papers': typeof AdminPapersRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/tags': typeof AdminTagsRoute
+  '/admin/themes': typeof AdminThemesRoute
+  '/admin/toppers': typeof AdminToppersRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/papers' | '/papers/$paperId'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/dashboard'
+    | '/login'
+    | '/papers'
+    | '/admin/papers'
+    | '/admin/questions'
+    | '/admin/tags'
+    | '/admin/themes'
+    | '/admin/toppers'
+    | '/papers/$paperId'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/papers' | '/papers/$paperId'
-  id:
-    | '__root__'
+  to:
     | '/'
     | '/dashboard'
     | '/login'
     | '/papers'
+    | '/admin/papers'
+    | '/admin/questions'
+    | '/admin/tags'
+    | '/admin/themes'
+    | '/admin/toppers'
     | '/papers/$paperId'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/dashboard'
+    | '/login'
+    | '/papers'
+    | '/admin/papers'
+    | '/admin/questions'
+    | '/admin/tags'
+    | '/admin/themes'
+    | '/admin/toppers'
+    | '/papers/$paperId'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   PapersRoute: typeof PapersRouteWithChildren
@@ -107,12 +200,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/papers/$paperId': {
       id: '/papers/$paperId'
@@ -121,8 +228,63 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PapersPaperIdRouteImport
       parentRoute: typeof PapersRoute
     }
+    '/admin/toppers': {
+      id: '/admin/toppers'
+      path: '/toppers'
+      fullPath: '/admin/toppers'
+      preLoaderRoute: typeof AdminToppersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/themes': {
+      id: '/admin/themes'
+      path: '/themes'
+      fullPath: '/admin/themes'
+      preLoaderRoute: typeof AdminThemesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tags': {
+      id: '/admin/tags'
+      path: '/tags'
+      fullPath: '/admin/tags'
+      preLoaderRoute: typeof AdminTagsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/questions': {
+      id: '/admin/questions'
+      path: '/questions'
+      fullPath: '/admin/questions'
+      preLoaderRoute: typeof AdminQuestionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/papers': {
+      id: '/admin/papers'
+      path: '/papers'
+      fullPath: '/admin/papers'
+      preLoaderRoute: typeof AdminPapersRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminPapersRoute: typeof AdminPapersRoute
+  AdminQuestionsRoute: typeof AdminQuestionsRoute
+  AdminTagsRoute: typeof AdminTagsRoute
+  AdminThemesRoute: typeof AdminThemesRoute
+  AdminToppersRoute: typeof AdminToppersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminPapersRoute: AdminPapersRoute,
+  AdminQuestionsRoute: AdminQuestionsRoute,
+  AdminTagsRoute: AdminTagsRoute,
+  AdminThemesRoute: AdminThemesRoute,
+  AdminToppersRoute: AdminToppersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface PapersRouteChildren {
   PapersPaperIdRoute: typeof PapersPaperIdRoute
@@ -137,6 +299,7 @@ const PapersRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   PapersRoute: PapersRouteWithChildren,

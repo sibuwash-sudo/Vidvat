@@ -158,14 +158,146 @@ export type Database = {
           },
         ]
       }
+      tags: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      themes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          paper: Database["public"]["Enums"]["gs_paper"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          paper?: Database["public"]["Enums"]["gs_paper"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          paper?: Database["public"]["Enums"]["gs_paper"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      topper_copies: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          paper: Database["public"]["Enums"]["gs_paper"]
+          paper_id: string | null
+          pdf_path: string
+          rank: number | null
+          subject: string | null
+          topper_name: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paper: Database["public"]["Enums"]["gs_paper"]
+          paper_id?: string | null
+          pdf_path: string
+          rank?: number | null
+          subject?: string | null
+          topper_name: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paper?: Database["public"]["Enums"]["gs_paper"]
+          paper_id?: string | null
+          pdf_path?: string
+          rank?: number | null
+          subject?: string | null
+          topper_name?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topper_copies_paper_id_fkey"
+            columns: ["paper_id"]
+            isOneToOne: false
+            referencedRelation: "papers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "user"
       attempt_status: "to_attempt" | "reading" | "practiced" | "written"
       gs_paper: "Essay" | "GS1" | "GS2" | "GS3" | "GS4"
     }
@@ -295,6 +427,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       attempt_status: ["to_attempt", "reading", "practiced", "written"],
       gs_paper: ["Essay", "GS1", "GS2", "GS3", "GS4"],
     },

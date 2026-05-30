@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
+import { useIsAdmin } from "@/lib/use-is-admin";
 import { Button } from "@/components/ui/button";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Shield } from "lucide-react";
 
 export function SiteHeader() {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
 
   return (
     <header className="border-b border-border/60 bg-background/80 backdrop-blur sticky top-0 z-40">
@@ -36,6 +38,15 @@ export function SiteHeader() {
               >
                 Dashboard
               </Link>
+              {isAdmin && (
+                <Link
+                  to={"/admin" as never}
+                  className="px-3 py-2 rounded-md hover:bg-secondary transition-colors inline-flex items-center gap-1.5"
+                  activeProps={{ className: "px-3 py-2 rounded-md bg-secondary font-medium inline-flex items-center gap-1.5" }}
+                >
+                  <Shield className="h-3.5 w-3.5" /> Admin
+                </Link>
+              )}
               <Button variant="ghost" size="sm" onClick={() => signOut()}>
                 Sign out
               </Button>
