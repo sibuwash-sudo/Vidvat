@@ -38,6 +38,15 @@ export function SiteHeader() {
               >
                 Dashboard
               </Link>
+              {isAdmin && (
+                <Link
+                  to={"/admin" as never}
+                  className="px-3 py-2 rounded-md hover:bg-secondary transition-colors inline-flex items-center gap-1.5"
+                  activeProps={{ className: "px-3 py-2 rounded-md bg-secondary font-medium inline-flex items-center gap-1.5" }}
+                >
+                  <Shield className="h-3.5 w-3.5" /> Admin
+                </Link>
+              )}
               <Button variant="ghost" size="sm" onClick={() => signOut()}>
                 Sign out
               </Button>
