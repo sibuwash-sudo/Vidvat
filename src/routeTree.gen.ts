@@ -16,6 +16,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PapersPaperIdRouteImport } from './routes/papers.$paperId'
+import { Route as AdminTagsRouteImport } from './routes/admin.tags'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminPapersRouteImport } from './routes/admin.papers'
 
@@ -54,6 +55,11 @@ const PapersPaperIdRoute = PapersPaperIdRouteImport.update({
   path: '/$paperId',
   getParentRoute: () => PapersRoute,
 } as any)
+const AdminTagsRoute = AdminTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
   id: '/questions',
   path: '/questions',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/papers': typeof PapersRouteWithChildren
   '/admin/papers': typeof AdminPapersRoute
   '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/tags': typeof AdminTagsRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/papers': typeof PapersRouteWithChildren
   '/admin/papers': typeof AdminPapersRoute
   '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/tags': typeof AdminTagsRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/papers': typeof PapersRouteWithChildren
   '/admin/papers': typeof AdminPapersRoute
   '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/tags': typeof AdminTagsRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/papers'
     | '/admin/papers'
     | '/admin/questions'
+    | '/admin/tags'
     | '/papers/$paperId'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/papers'
     | '/admin/papers'
     | '/admin/questions'
+    | '/admin/tags'
     | '/papers/$paperId'
     | '/admin'
   id:
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/papers'
     | '/admin/papers'
     | '/admin/questions'
+    | '/admin/tags'
     | '/papers/$paperId'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -192,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PapersPaperIdRouteImport
       parentRoute: typeof PapersRoute
     }
+    '/admin/tags': {
+      id: '/admin/tags'
+      path: '/tags'
+      fullPath: '/admin/tags'
+      preLoaderRoute: typeof AdminTagsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/questions': {
       id: '/admin/questions'
       path: '/questions'
@@ -212,12 +231,14 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminPapersRoute: typeof AdminPapersRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
+  AdminTagsRoute: typeof AdminTagsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminPapersRoute: AdminPapersRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
+  AdminTagsRoute: AdminTagsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
