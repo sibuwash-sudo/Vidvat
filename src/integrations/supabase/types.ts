@@ -14,7 +14,150 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          created_at: string
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      papers: {
+        Row: {
+          id: string
+          paper: Database["public"]["Enums"]["gs_paper"]
+          title: string
+          total_marks: number
+          year: number
+        }
+        Insert: {
+          id?: string
+          paper: Database["public"]["Enums"]["gs_paper"]
+          title: string
+          total_marks?: number
+          year: number
+        }
+        Update: {
+          id?: string
+          paper?: Database["public"]["Enums"]["gs_paper"]
+          title?: string
+          total_marks?: number
+          year?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          target_year: number | null
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+          target_year?: number | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          target_year?: number | null
+        }
+        Relationships: []
+      }
+      progress: {
+        Row: {
+          note: string | null
+          question_id: string
+          status: Database["public"]["Enums"]["attempt_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          note?: string | null
+          question_id: string
+          status?: Database["public"]["Enums"]["attempt_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          note?: string | null
+          question_id?: string
+          status?: Database["public"]["Enums"]["attempt_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          id: string
+          marks: number
+          paper_id: string
+          q_number: number
+          section: string | null
+          text: string
+          theme: string | null
+          word_limit: number
+        }
+        Insert: {
+          id?: string
+          marks?: number
+          paper_id: string
+          q_number: number
+          section?: string | null
+          text: string
+          theme?: string | null
+          word_limit?: number
+        }
+        Update: {
+          id?: string
+          marks?: number
+          paper_id?: string
+          q_number?: number
+          section?: string | null
+          text?: string
+          theme?: string | null
+          word_limit?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_paper_id_fkey"
+            columns: ["paper_id"]
+            isOneToOne: false
+            referencedRelation: "papers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +166,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      attempt_status: "to_attempt" | "reading" | "practiced" | "written"
+      gs_paper: "Essay" | "GS1" | "GS2" | "GS3" | "GS4"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +294,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      attempt_status: ["to_attempt", "reading", "practiced", "written"],
+      gs_paper: ["Essay", "GS1", "GS2", "GS3", "GS4"],
+    },
   },
 } as const
