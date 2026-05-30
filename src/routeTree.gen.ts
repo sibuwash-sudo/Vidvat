@@ -16,6 +16,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as PapersPaperIdRouteImport } from './routes/papers.$paperId'
+import { Route as AdminPapersRouteImport } from './routes/admin.papers'
 
 const PapersRoute = PapersRouteImport.update({
   id: '/papers',
@@ -52,6 +53,11 @@ const PapersPaperIdRoute = PapersPaperIdRouteImport.update({
   path: '/$paperId',
   getParentRoute: () => PapersRoute,
 } as any)
+const AdminPapersRoute = AdminPapersRouteImport.update({
+  id: '/papers',
+  path: '/papers',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/papers': typeof AdminPapersRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/papers': typeof AdminPapersRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/papers': typeof AdminPapersRoute
   '/papers/$paperId': typeof PapersPaperIdRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -88,10 +97,18 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/papers'
+    | '/admin/papers'
     | '/papers/$paperId'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/papers' | '/papers/$paperId' | '/admin'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/papers'
+    | '/admin/papers'
+    | '/papers/$paperId'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -99,6 +116,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/papers'
+    | '/admin/papers'
     | '/papers/$paperId'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -162,14 +180,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PapersPaperIdRouteImport
       parentRoute: typeof PapersRoute
     }
+    '/admin/papers': {
+      id: '/admin/papers'
+      path: '/papers'
+      fullPath: '/admin/papers'
+      preLoaderRoute: typeof AdminPapersRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminPapersRoute: typeof AdminPapersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminPapersRoute: AdminPapersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -196,3 +223,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
