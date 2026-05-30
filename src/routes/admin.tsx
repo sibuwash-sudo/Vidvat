@@ -10,14 +10,14 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
-const tabs = [
+const tabs: { to: string; label: string; exact?: boolean }[] = [
   { to: "/admin", label: "Overview", exact: true },
   { to: "/admin/papers", label: "Papers" },
   { to: "/admin/questions", label: "Questions" },
   { to: "/admin/tags", label: "Tags" },
   { to: "/admin/themes", label: "Themes" },
   { to: "/admin/toppers", label: "Topper Copies" },
-] as const;
+];
 
 function AdminLayout() {
   const { isAdmin, loading, user } = useIsAdmin();
