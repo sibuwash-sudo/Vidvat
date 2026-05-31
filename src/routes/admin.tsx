@@ -84,14 +84,21 @@ function AdminLayout() {
         {loading ? (
           <Skeleton className="h-40 w-full" />
         ) : !isAdmin ? (
-          <div className="rounded-lg border border-border bg-card p-8 text-center max-w-lg mx-auto">
-            <ShieldAlert className="h-10 w-10 text-primary mx-auto mb-3" />
-            <h2 className="font-display text-2xl mb-2">Restricted area</h2>
-            <p className="text-sm text-muted-foreground">
-              You need administrator privileges to view this section. Ask an existing admin to grant you the
-              <code className="mx-1 px-1.5 py-0.5 rounded bg-secondary text-foreground">admin</code> role.
-            </p>
-          </div>
+          <>
+            <div className="rounded-lg border border-border bg-card p-8 text-center max-w-lg mx-auto">
+              <ShieldAlert className="h-10 w-10 text-primary mx-auto mb-3" />
+              <h2 className="font-display text-2xl mb-2">Restricted area</h2>
+              <p className="text-sm text-muted-foreground">
+                You need administrator privileges to view this section. Ask an existing admin to grant you the
+                <code className="mx-1 px-1.5 py-0.5 rounded bg-secondary text-foreground">admin</code> role.
+              </p>
+            </div>
+            {user && (
+              <FirstAdminWizard
+                onClaimed={() => qc.invalidateQueries({ queryKey: ["is-admin"] })}
+              />
+            )}
+          </>
         ) : (
           <>
             <nav className="flex flex-wrap gap-1 border-b border-border mb-8">
