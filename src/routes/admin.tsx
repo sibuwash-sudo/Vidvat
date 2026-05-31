@@ -1,9 +1,14 @@
 import { createFileRoute, Link, Outlet, useNavigate, useLocation } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SiteHeader } from "@/components/site-header";
 import { useIsAdmin } from "@/lib/use-is-admin";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ShieldAlert, Sparkles } from "lucide-react";
+import { checkAdminBootstrap, claimFirstAdmin } from "@/lib/admin-bootstrap.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin — Vidvat" }] }),
@@ -19,10 +24,49 @@ const tabs: { to: string; label: string; exact?: boolean }[] = [
   { to: "/admin/toppers", label: "Topper Copies" },
 ];
 
+function FirstAdminWizard({ onClaimed }: { onClaimed: () => void }) {
+  const check = useServerFn(checkAdminBootstrap);
+  const claim = useServerFn(claimFirstAdmin);
+  const qc = useQueryClient();
+
+  const bootstrapQ = useQuery({
+    queryKey: ["admin-bootstrap"],
+    queryFn: () => check(),
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => claim(),
+    onSuccess: () => {
+      toast.success("You're now an admin!");
+      qc.invalidateQueries({ queryKey: ["is-admin"] });
+      qc.invalidateQueries({ queryKey: ["admin-bootstrap"] });
+      onClaimed();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (bootstrapQ.isLoading) return null;
+  if (bootstrapQ.data?.adminExists) return null;
+
+  return (
+    <div className="rounded-lg border border-primary/30 bg-primary/5 p-6 max-w-lg mx-auto mt-6 text-center">
+      <Sparkles className="h-8 w-8 text-primary mx-auto mb-3" />
+      <h3 className="font-display text-xl mb-2">Claim first admin</h3>
+      <p className="text-sm text-muted-foreground mb-4">
+        No administrator has been set up yet. Since you're the first one here, you can claim the admin role for your account.
+      </p>
+      <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+        {mutation.isPending ? "Granting…" : "Make me admin"}
+      </Button>
+    </div>
+  );
+}
+
 function AdminLayout() {
   const { isAdmin, loading, user } = useIsAdmin();
   const navigate = useNavigate();
   const location = useLocation();
+  const qc = useQueryClient();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
