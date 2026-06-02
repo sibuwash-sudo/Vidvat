@@ -21,6 +21,7 @@ import { Route as AdminThemesRouteImport } from './routes/admin.themes'
 import { Route as AdminTagsRouteImport } from './routes/admin.tags'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminPapersRouteImport } from './routes/admin.papers'
+import { Route as AdminMicrothemesRouteImport } from './routes/admin.microthemes'
 
 const PapersRoute = PapersRouteImport.update({
   id: '/papers',
@@ -82,6 +83,11 @@ const AdminPapersRoute = AdminPapersRouteImport.update({
   path: '/papers',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMicrothemesRoute = AdminMicrothemesRouteImport.update({
+  id: '/microthemes',
+  path: '/microthemes',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/microthemes': typeof AdminMicrothemesRoute
   '/admin/papers': typeof AdminPapersRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/tags': typeof AdminTagsRoute
@@ -102,6 +109,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/microthemes': typeof AdminMicrothemesRoute
   '/admin/papers': typeof AdminPapersRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/tags': typeof AdminTagsRoute
@@ -117,6 +125,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/papers': typeof PapersRouteWithChildren
+  '/admin/microthemes': typeof AdminMicrothemesRoute
   '/admin/papers': typeof AdminPapersRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/tags': typeof AdminTagsRoute
@@ -133,6 +142,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/papers'
+    | '/admin/microthemes'
     | '/admin/papers'
     | '/admin/questions'
     | '/admin/tags'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/papers'
+    | '/admin/microthemes'
     | '/admin/papers'
     | '/admin/questions'
     | '/admin/tags'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/papers'
+    | '/admin/microthemes'
     | '/admin/papers'
     | '/admin/questions'
     | '/admin/tags'
@@ -263,10 +275,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPapersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/microthemes': {
+      id: '/admin/microthemes'
+      path: '/microthemes'
+      fullPath: '/admin/microthemes'
+      preLoaderRoute: typeof AdminMicrothemesRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminMicrothemesRoute: typeof AdminMicrothemesRoute
   AdminPapersRoute: typeof AdminPapersRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminTagsRoute: typeof AdminTagsRoute
@@ -276,6 +296,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminMicrothemesRoute: AdminMicrothemesRoute,
   AdminPapersRoute: AdminPapersRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminTagsRoute: AdminTagsRoute,
@@ -307,13 +328,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
