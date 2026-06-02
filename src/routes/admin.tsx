@@ -21,6 +21,7 @@ const tabs: { to: string; label: string; exact?: boolean }[] = [
   { to: "/admin/questions", label: "Questions" },
   { to: "/admin/tags", label: "Tags" },
   { to: "/admin/themes", label: "Themes" },
+  { to: "/admin/microthemes", label: "Microthemes" },
   { to: "/admin/toppers", label: "Topper Copies" },
 ];
 
