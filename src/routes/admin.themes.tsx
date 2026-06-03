@@ -79,6 +79,17 @@ function ThemesAdmin() {
       <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
         <h2 className="font-display text-2xl">Themes</h2>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() =>
+              downloadCsv(
+                "name,paper,description\nIndian Society,GS1,Issues related to Indian society\nWomen,GS1,Issues related to women empowerment\n",
+                "themes-template.csv"
+              )
+            }
+          >
+            <Download className="h-4 w-4 mr-1" /> Download Template
+          </Button>
           <CsvImportButton
             label="Import Themes CSV"
             expectedHeaders={["name", "paper", "description"]}
