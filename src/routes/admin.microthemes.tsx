@@ -35,14 +35,24 @@ export const Route = createFileRoute("/admin/microthemes")({
 function MicrothemesAdmin() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Microtheme> | null>(null);
+  const [filterSubject, setFilterSubject] = useState<string>("_all");
   const [filterTheme, setFilterTheme] = useState<string>("_all");
+
+  const subjectsQ = useQuery({
+    queryKey: ["admin", "subjects"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("subjects").select("id, name, display_order").order("display_order");
+      if (error) throw error;
+      return data as Subject[];
+    },
+  });
 
   const themesQ = useQuery({
     queryKey: ["admin", "themes", "for-microthemes"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("themes")
-        .select("id, name, paper")
+        .select("id, name, paper, subject_id")
         .order("paper")
         .order("name");
       if (error) throw error;
@@ -68,11 +78,22 @@ function MicrothemesAdmin() {
     return map;
   }, [themesQ.data]);
 
+  const themesForFilter = useMemo(() => {
+    if (!themesQ.data) return [];
+    if (filterSubject === "_all") return themesQ.data;
+    return themesQ.data.filter((t) => t.subject_id === filterSubject);
+  }, [themesQ.data, filterSubject]);
+
   const filtered = useMemo(() => {
     if (!microsQ.data) return [];
-    if (filterTheme === "_all") return microsQ.data;
-    return microsQ.data.filter((m) => m.theme_id === filterTheme);
-  }, [microsQ.data, filterTheme]);
+    let list = microsQ.data;
+    if (filterSubject !== "_all") {
+      const allowed = new Set(themesForFilter.map((t) => t.id));
+      list = list.filter((m) => allowed.has(m.theme_id));
+    }
+    if (filterTheme !== "_all") list = list.filter((m) => m.theme_id === filterTheme);
+    return list;
+  }, [microsQ.data, filterTheme, filterSubject, themesForFilter]);
 
   const upsert = useMutation({
     mutationFn: async (m: Partial<Microtheme>) => {
