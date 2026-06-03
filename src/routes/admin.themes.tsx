@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,13 @@ import { Field, FormDialog } from "@/components/admin/papers-admin";
 import { DialogFooter } from "@/components/ui/dialog";
 import { CsvImportButton, type CsvImportResult, downloadCsv } from "@/components/admin/csv-import";
 
+type Subject = { id: string; name: string; display_order: number };
 type Theme = {
   id: string;
   name: string;
   paper: "Essay" | "GS1" | "GS2" | "GS3" | "GS4" | null;
   description: string | null;
+  subject_id: string | null;
 };
 
 const PAPERS = ["Essay", "GS1", "GS2", "GS3", "GS4"] as const;
