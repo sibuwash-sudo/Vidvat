@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Field, FormDialog } from "@/components/admin/papers-admin";
 import { DialogFooter } from "@/components/ui/dialog";
-import { CsvImportButton, type CsvImportResult } from "@/components/admin/csv-import";
+import { CsvImportButton, type CsvImportResult, downloadCsv } from "@/components/admin/csv-import";
 
 type Theme = {
   id: string;
@@ -116,6 +116,17 @@ function MicrothemesAdmin() {
       <div className="flex flex-wrap gap-3 justify-between items-center mb-4">
         <h2 className="font-display text-2xl">Microthemes</h2>
         <div className="flex gap-2 items-center">
+          <Button
+            variant="outline"
+            onClick={() =>
+              downloadCsv(
+                "theme_name,microtheme_name,description\nIndian Society,Women,Issues related to women empowerment\nIndian Society,Poverty,Issues related to poverty and hunger\n",
+                "microthemes-template.csv"
+              )
+            }
+          >
+            <Download className="h-4 w-4 mr-1" /> Download Template
+          </Button>
           <Select value={filterTheme} onValueChange={setFilterTheme}>
             <SelectTrigger className="w-64"><SelectValue placeholder="Filter by theme" /></SelectTrigger>
             <SelectContent>
