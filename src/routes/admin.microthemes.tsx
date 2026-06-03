@@ -13,10 +13,12 @@ import { Field, FormDialog } from "@/components/admin/papers-admin";
 import { DialogFooter } from "@/components/ui/dialog";
 import { CsvImportButton, type CsvImportResult, downloadCsv } from "@/components/admin/csv-import";
 
+type Subject = { id: string; name: string; display_order: number };
 type Theme = {
   id: string;
   name: string;
   paper: "Essay" | "GS1" | "GS2" | "GS3" | "GS4" | null;
+  subject_id: string | null;
 };
 
 type Microtheme = {
