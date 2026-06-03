@@ -150,11 +150,18 @@ function MicrothemesAdmin() {
           >
             <Download className="h-4 w-4 mr-1" /> Download Template
           </Button>
+          <Select value={filterSubject} onValueChange={(v) => { setFilterSubject(v); setFilterTheme("_all"); }}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="Filter by subject" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_all">All subjects</SelectItem>
+              {subjectsQ.data?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <Select value={filterTheme} onValueChange={setFilterTheme}>
             <SelectTrigger className="w-64"><SelectValue placeholder="Filter by theme" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="_all">All themes</SelectItem>
-              {themesQ.data?.map((t) => (
+              {themesForFilter.map((t) => (
                 <SelectItem key={t.id} value={t.id}>
                   {t.paper ? `[${t.paper}] ` : ""}{t.name}
                 </SelectItem>
