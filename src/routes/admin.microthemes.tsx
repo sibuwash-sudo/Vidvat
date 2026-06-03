@@ -116,6 +116,17 @@ function MicrothemesAdmin() {
       <div className="flex flex-wrap gap-3 justify-between items-center mb-4">
         <h2 className="font-display text-2xl">Microthemes</h2>
         <div className="flex gap-2 items-center">
+          <Button
+            variant="outline"
+            onClick={() =>
+              downloadCsv(
+                "theme_name,microtheme_name,description\nIndian Society,Women,Issues related to women empowerment\nIndian Society,Poverty,Issues related to poverty and hunger\n",
+                "microthemes-template.csv"
+              )
+            }
+          >
+            <Download className="h-4 w-4 mr-1" /> Download Template
+          </Button>
           <Select value={filterTheme} onValueChange={setFilterTheme}>
             <SelectTrigger className="w-64"><SelectValue placeholder="Filter by theme" /></SelectTrigger>
             <SelectContent>
