@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,11 +13,13 @@ import { Field, FormDialog } from "@/components/admin/papers-admin";
 import { DialogFooter } from "@/components/ui/dialog";
 import { CsvImportButton, type CsvImportResult, downloadCsv } from "@/components/admin/csv-import";
 
+type Subject = { id: string; name: string; display_order: number };
 type Theme = {
   id: string;
   name: string;
   paper: "Essay" | "GS1" | "GS2" | "GS3" | "GS4" | null;
   description: string | null;
+  subject_id: string | null;
 };
 
 const PAPERS = ["Essay", "GS1", "GS2", "GS3", "GS4"] as const;
@@ -29,6 +31,16 @@ export const Route = createFileRoute("/admin/themes")({
 function ThemesAdmin() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Partial<Theme> | null>(null);
+  const [filterSubject, setFilterSubject] = useState<string>("_all");
+
+  const subjectsQ = useQuery({
+    queryKey: ["admin", "subjects"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("subjects").select("id, name, display_order").order("display_order");
+      if (error) throw error;
+      return data as Subject[];
+    },
+  });
 
   const themesQ = useQuery({
     queryKey: ["admin", "themes"],
@@ -39,12 +51,25 @@ function ThemesAdmin() {
     },
   });
 
+  const subjectById = useMemo(() => {
+    const m = new Map<string, Subject>();
+    subjectsQ.data?.forEach((s) => m.set(s.id, s));
+    return m;
+  }, [subjectsQ.data]);
+
+  const filteredThemes = useMemo(() => {
+    if (!themesQ.data) return [];
+    if (filterSubject === "_all") return themesQ.data;
+    return themesQ.data.filter((t) => t.subject_id === filterSubject);
+  }, [themesQ.data, filterSubject]);
+
   const upsert = useMutation({
     mutationFn: async (t: Partial<Theme>) => {
       const payload = {
         name: t.name!,
         paper: t.paper || null,
         description: t.description || null,
+        subject_id: t.subject_id || null,
       };
       if (t.id) {
         const { error } = await supabase.from("themes").update(payload).eq("id", t.id);
@@ -78,7 +103,14 @@ function ThemesAdmin() {
     <div>
       <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
         <h2 className="font-display text-2xl">Themes</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap items-center">
+          <Select value={filterSubject} onValueChange={setFilterSubject}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="Filter by subject" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_all">All subjects</SelectItem>
+              {subjectsQ.data?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             onClick={() =>
@@ -98,6 +130,9 @@ function ThemesAdmin() {
               const result: CsvImportResult = { created: 0, skipped: 0, errors: [] };
               const { data: existing, error: exErr } = await supabase.from("themes").select("name, paper");
               if (exErr) throw new Error(exErr.message);
+              const { data: subs } = await supabase.from("subjects").select("id, name");
+              const subjectIdByName = new Map<string, string>();
+              (subs ?? []).forEach((s) => subjectIdByName.set(s.name, s.id));
               const key = (n: string, p: string | null) => `${n.toLowerCase()}::${p ?? ""}`;
               const have = new Set((existing ?? []).map((t) => key(t.name, t.paper)));
               const validPapers = new Set(PAPERS as readonly string[]);
@@ -114,7 +149,9 @@ function ThemesAdmin() {
                 const k = key(name, paper);
                 if (have.has(k)) { result.skipped++; continue; }
                 const { error } = await supabase.from("themes").insert({
-                  name, paper: paper as Theme["paper"], description: r.description?.trim() || null,
+                  name, paper: paper as Theme["paper"],
+                  description: r.description?.trim() || null,
+                  subject_id: paper ? subjectIdByName.get(paper) ?? null : null,
                 });
                 if (error) { result.errors.push({ row: rowNum, message: error.message }); continue; }
                 have.add(k); result.created++;
@@ -124,7 +161,7 @@ function ThemesAdmin() {
               return result;
             }}
           />
-          <Button onClick={() => setEditing({ name: "", paper: null, description: "" })}>
+          <Button onClick={() => setEditing({ name: "", paper: null, description: "", subject_id: null })}>
             <Plus className="h-4 w-4 mr-1" /> New theme
           </Button>
         </div>
@@ -135,15 +172,17 @@ function ThemesAdmin() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Subject</TableHead>
               <TableHead>Paper</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="w-32 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {themesQ.data?.map((t) => (
+            {filteredThemes.map((t) => (
               <TableRow key={t.id}>
                 <TableCell className="font-medium">{t.name}</TableCell>
+                <TableCell>{t.subject_id ? subjectById.get(t.subject_id)?.name ?? "—" : "—"}</TableCell>
                 <TableCell>{t.paper || "—"}</TableCell>
                 <TableCell className="max-w-md truncate text-muted-foreground">{t.description || "—"}</TableCell>
                 <TableCell className="text-right">
@@ -167,6 +206,16 @@ function ThemesAdmin() {
             <Field label="Name">
               <Input value={editing.name ?? ""}
                 onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+            </Field>
+            <Field label="Subject">
+              <Select value={editing.subject_id ?? "_none"}
+                onValueChange={(v) => setEditing({ ...editing, subject_id: v === "_none" ? null : v })}>
+                <SelectTrigger><SelectValue placeholder="Select a subject" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">None</SelectItem>
+                  {subjectsQ.data?.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </Field>
             <Field label="Paper (optional)">
               <Select value={editing.paper ?? "_none"}
