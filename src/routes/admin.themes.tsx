@@ -11,6 +11,7 @@ import { Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Field, FormDialog } from "@/components/admin/papers-admin";
 import { DialogFooter } from "@/components/ui/dialog";
+import { CsvImportButton, type CsvImportResult } from "@/components/admin/csv-import";
 
 type Theme = {
   id: string;
@@ -75,11 +76,47 @@ function ThemesAdmin() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
         <h2 className="font-display text-2xl">Themes</h2>
-        <Button onClick={() => setEditing({ name: "", paper: null, description: "" })}>
-          <Plus className="h-4 w-4 mr-1" /> New theme
-        </Button>
+        <div className="flex gap-2">
+          <CsvImportButton
+            label="Import Themes CSV"
+            expectedHeaders={["name", "paper", "description"]}
+            templateSample={"name,paper,description\nIndian Society,GS1,Sample theme\n"}
+            onImport={async (rows) => {
+              const result: CsvImportResult = { created: 0, skipped: 0, errors: [] };
+              const { data: existing, error: exErr } = await supabase.from("themes").select("name, paper");
+              if (exErr) throw new Error(exErr.message);
+              const key = (n: string, p: string | null) => `${n.toLowerCase()}::${p ?? ""}`;
+              const have = new Set((existing ?? []).map((t) => key(t.name, t.paper)));
+              const validPapers = new Set(PAPERS as readonly string[]);
+              for (let i = 0; i < rows.length; i++) {
+                const r = rows[i];
+                const rowNum = i + 2;
+                const name = r.name?.trim();
+                const paperRaw = r.paper?.trim() || "";
+                const paper = paperRaw === "" ? null : paperRaw;
+                if (!name) { result.errors.push({ row: rowNum, message: "Missing name" }); continue; }
+                if (paper && !validPapers.has(paper)) {
+                  result.errors.push({ row: rowNum, message: `Invalid paper "${paper}"` }); continue;
+                }
+                const k = key(name, paper);
+                if (have.has(k)) { result.skipped++; continue; }
+                const { error } = await supabase.from("themes").insert({
+                  name, paper: paper as Theme["paper"], description: r.description?.trim() || null,
+                });
+                if (error) { result.errors.push({ row: rowNum, message: error.message }); continue; }
+                have.add(k); result.created++;
+              }
+              qc.invalidateQueries({ queryKey: ["admin", "themes"] });
+              qc.invalidateQueries({ queryKey: ["admin-overview"] });
+              return result;
+            }}
+          />
+          <Button onClick={() => setEditing({ name: "", paper: null, description: "" })}>
+            <Plus className="h-4 w-4 mr-1" /> New theme
+          </Button>
+        </div>
       </div>
 
       <div className="border border-border rounded-lg overflow-hidden">

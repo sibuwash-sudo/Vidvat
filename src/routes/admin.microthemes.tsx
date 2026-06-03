@@ -11,6 +11,7 @@ import { Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Field, FormDialog } from "@/components/admin/papers-admin";
 import { DialogFooter } from "@/components/ui/dialog";
+import { CsvImportButton, type CsvImportResult } from "@/components/admin/csv-import";
 
 type Theme = {
   id: string;
@@ -126,6 +127,40 @@ function MicrothemesAdmin() {
               ))}
             </SelectContent>
           </Select>
+          <CsvImportButton
+            label="Import Microthemes CSV"
+            expectedHeaders={["theme_name", "microtheme_name", "description"]}
+            templateSample={"theme_name,microtheme_name,description\nIndian Society,Women,Issues related to women\n"}
+            onImport={async (rows) => {
+              const result: CsvImportResult = { created: 0, skipped: 0, errors: [] };
+              const { data: themes, error: tErr } = await supabase.from("themes").select("id, name");
+              if (tErr) throw new Error(tErr.message);
+              const themeIdByName = new Map<string, string>();
+              (themes ?? []).forEach((t) => themeIdByName.set(t.name.toLowerCase(), t.id));
+              const { data: existing, error: mErr } = await supabase.from("microthemes").select("theme_id, name");
+              if (mErr) throw new Error(mErr.message);
+              const have = new Set((existing ?? []).map((m) => `${m.theme_id}::${m.name.toLowerCase()}`));
+              for (let i = 0; i < rows.length; i++) {
+                const r = rows[i];
+                const rowNum = i + 2;
+                const tName = r.theme_name?.trim();
+                const mName = r.microtheme_name?.trim();
+                if (!tName || !mName) { result.errors.push({ row: rowNum, message: "Missing theme_name or microtheme_name" }); continue; }
+                const themeId = themeIdByName.get(tName.toLowerCase());
+                if (!themeId) { result.errors.push({ row: rowNum, message: `Theme not found: ${tName}` }); continue; }
+                const k = `${themeId}::${mName.toLowerCase()}`;
+                if (have.has(k)) { result.skipped++; continue; }
+                const { error } = await supabase.from("microthemes").insert({
+                  theme_id: themeId, name: mName, description: r.description?.trim() || null,
+                });
+                if (error) { result.errors.push({ row: rowNum, message: error.message }); continue; }
+                have.add(k); result.created++;
+              }
+              qc.invalidateQueries({ queryKey: ["admin", "microthemes"] });
+              qc.invalidateQueries({ queryKey: ["admin-overview"] });
+              return result;
+            }}
+          />
           <Button
             onClick={() => setEditing({ name: "", theme_id: filterTheme !== "_all" ? filterTheme : "", description: "" })}
             disabled={!themesQ.data?.length}
