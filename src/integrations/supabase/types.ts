@@ -193,6 +193,33 @@ export type Database = {
           },
         ]
       }
+      subjects: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           created_at: string
@@ -227,6 +254,7 @@ export type Database = {
           id: string
           name: string
           paper: Database["public"]["Enums"]["gs_paper"] | null
+          subject_id: string | null
           updated_at: string
         }
         Insert: {
@@ -235,6 +263,7 @@ export type Database = {
           id?: string
           name: string
           paper?: Database["public"]["Enums"]["gs_paper"] | null
+          subject_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -243,9 +272,18 @@ export type Database = {
           id?: string
           name?: string
           paper?: Database["public"]["Enums"]["gs_paper"] | null
+          subject_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "themes_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       topper_copies: {
         Row: {
