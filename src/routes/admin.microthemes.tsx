@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, Download } from "lucide-react";
+import { Pencil, Trash2, Plus, Download, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Field, FormDialog } from "@/components/admin/papers-admin";
-import { DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { CsvImportButton, type CsvImportResult, downloadCsv } from "@/components/admin/csv-import";
+import { generateMicrothemesForAllThemes, type ThemeReport } from "@/lib/generate-microthemes.functions";
 
 type Subject = { id: string; name: string; display_order: number };
 type Theme = {
@@ -37,6 +39,21 @@ function MicrothemesAdmin() {
   const [editing, setEditing] = useState<Partial<Microtheme> | null>(null);
   const [filterSubject, setFilterSubject] = useState<string>("_all");
   const [filterTheme, setFilterTheme] = useState<string>("_all");
+  const [genReport, setGenReport] = useState<ThemeReport[] | null>(null);
+  const generateFn = useServerFn(generateMicrothemesForAllThemes);
+
+  const generate = useMutation({
+    mutationFn: async () => generateFn(),
+    onSuccess: (res) => {
+      setGenReport(res.reports);
+      const created = res.reports.reduce((a, r) => a + r.created, 0);
+      const errors = res.reports.filter((r) => r.error).length;
+      toast.success(`Generated ${created} microthemes across ${res.reports.length} themes • ${errors} errors`);
+      qc.invalidateQueries({ queryKey: ["admin", "microthemes"] });
+      qc.invalidateQueries({ queryKey: ["admin-overview"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const subjectsQ = useQuery({
     queryKey: ["admin", "subjects"],
@@ -203,6 +220,14 @@ function MicrothemesAdmin() {
             }}
           />
           <Button
+            variant="secondary"
+            onClick={() => generate.mutate()}
+            disabled={generate.isPending}
+          >
+            {generate.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+            Generate UPSC Microthemes
+          </Button>
+          <Button
             onClick={() => setEditing({ name: "", theme_id: filterTheme !== "_all" ? filterTheme : "", description: "" })}
             disabled={!themesQ.data?.length}
           >
@@ -299,6 +324,53 @@ function MicrothemesAdmin() {
           </div>
         )}
       </FormDialog>
+
+      <Dialog open={!!genReport} onOpenChange={(o) => !o && setGenReport(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Microtheme Generation Report</DialogTitle>
+          </DialogHeader>
+          {genReport && (
+            <div className="space-y-3 text-sm">
+              <div className="flex gap-4 text-xs">
+                <span className="text-green-600">Created: {genReport.reduce((a, r) => a + r.created, 0)}</span>
+                <span className="text-amber-600">Skipped (dupes): {genReport.reduce((a, r) => a + r.skipped, 0)}</span>
+                <span className="text-destructive">Errors: {genReport.filter((r) => r.error).length}</span>
+                <span className="text-muted-foreground">Themes: {genReport.length}</span>
+              </div>
+              <div className="max-h-96 overflow-auto border border-border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Theme</TableHead>
+                      <TableHead>Paper</TableHead>
+                      <TableHead className="text-right">Created</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {genReport.map((r) => (
+                      <TableRow key={r.theme_id}>
+                        <TableCell className="font-medium">{r.theme_name}</TableCell>
+                        <TableCell>{r.paper ?? "—"}</TableCell>
+                        <TableCell className="text-right">{r.created}</TableCell>
+                        <TableCell className="text-right">{r.total}</TableCell>
+                        <TableCell className={r.error ? "text-destructive text-xs" : "text-green-600 text-xs"}>
+                          {r.error ?? "OK"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setGenReport(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
