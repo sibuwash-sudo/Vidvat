@@ -156,39 +156,59 @@ export type Database = {
         Row: {
           id: string
           marks: number
+          microtheme_id: string | null
           paper_id: string
           q_number: number
           section: string | null
           text: string
           theme: string | null
+          theme_id: string | null
           word_limit: number
         }
         Insert: {
           id?: string
           marks?: number
+          microtheme_id?: string | null
           paper_id: string
           q_number: number
           section?: string | null
           text: string
           theme?: string | null
+          theme_id?: string | null
           word_limit?: number
         }
         Update: {
           id?: string
           marks?: number
+          microtheme_id?: string | null
           paper_id?: string
           q_number?: number
           section?: string | null
           text?: string
           theme?: string | null
+          theme_id?: string | null
           word_limit?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "questions_microtheme_id_fkey"
+            columns: ["microtheme_id"]
+            isOneToOne: false
+            referencedRelation: "microthemes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "questions_paper_id_fkey"
             columns: ["paper_id"]
             isOneToOne: false
             referencedRelation: "papers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
             referencedColumns: ["id"]
           },
         ]

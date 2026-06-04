@@ -11,10 +11,11 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Field, FormDialog } from "@/components/admin/papers-admin";
 import { DialogFooter } from "@/components/ui/dialog";
+import { CsvImportButton, type CsvImportResult, downloadCsv } from "@/components/admin/csv-import";
 
 type Question = {
   id: string;
@@ -115,19 +116,118 @@ function QuestionsAdmin() {
             </SelectContent>
           </Select>
         </div>
-        <Button
-          disabled={!paperId}
-          onClick={() =>
-            setEditing({
-              q_number: (questionsQ.data?.length ?? 0) + 1,
-              text: "",
-              marks: 10,
-              word_limit: 150,
-            })
-          }
-        >
-          <Plus className="h-4 w-4 mr-1" /> New question
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() =>
+              downloadCsv(
+                "question_number,paper,theme_name,microtheme_name\n1,GS1,Indian Society,Women\n2,GS2,Constitution,Fundamental Rights\n",
+                "question-mapping-template.csv"
+              )
+            }
+          >
+            <Download className="h-4 w-4 mr-1" /> Download Mapping Template
+          </Button>
+          <CsvImportButton
+            label="Import Question Mapping CSV"
+            expectedHeaders={["question_number", "paper", "theme_name", "microtheme_name"]}
+            templateSample={"question_number,paper,theme_name,microtheme_name\n1,GS1,Indian Society,Women\n"}
+            onImport={async (rows) => {
+              const result: CsvImportResult = { created: 0, skipped: 0, errors: [] };
+
+              const [papersRes, themesRes, microsRes] = await Promise.all([
+                supabase.from("papers").select("id, paper"),
+                supabase.from("themes").select("id, name"),
+                supabase.from("microthemes").select("id, name, theme_id"),
+              ]);
+              if (papersRes.error) throw new Error(papersRes.error.message);
+              if (themesRes.error) throw new Error(themesRes.error.message);
+              if (microsRes.error) throw new Error(microsRes.error.message);
+
+              const paperIdsByCode = new Map<string, string[]>();
+              (papersRes.data ?? []).forEach((p) => {
+                const k = String(p.paper).toLowerCase();
+                const arr = paperIdsByCode.get(k) ?? [];
+                arr.push(p.id);
+                paperIdsByCode.set(k, arr);
+              });
+              const themeIdByName = new Map<string, string>();
+              (themesRes.data ?? []).forEach((t) => themeIdByName.set(t.name.toLowerCase(), t.id));
+              const microByThemeAndName = new Map<string, string>();
+              (microsRes.data ?? []).forEach((m) =>
+                microByThemeAndName.set(`${m.theme_id}::${m.name.toLowerCase()}`, m.id)
+              );
+
+              for (let i = 0; i < rows.length; i++) {
+                const r = rows[i];
+                const rowNum = i + 2;
+                const qNum = Number(r.question_number);
+                const paperCode = r.paper?.trim();
+                const tName = r.theme_name?.trim();
+                const mName = r.microtheme_name?.trim();
+
+                if (!qNum || !paperCode || !tName || !mName) {
+                  result.errors.push({ row: rowNum, message: "Missing required field" });
+                  continue;
+                }
+                const paperIds = paperIdsByCode.get(paperCode.toLowerCase());
+                if (!paperIds?.length) {
+                  result.errors.push({ row: rowNum, message: `Paper not found: ${paperCode}` });
+                  continue;
+                }
+                const themeId = themeIdByName.get(tName.toLowerCase());
+                if (!themeId) {
+                  result.errors.push({ row: rowNum, message: `Theme not found: ${tName}` });
+                  continue;
+                }
+                const microId = microByThemeAndName.get(`${themeId}::${mName.toLowerCase()}`);
+                if (!microId) {
+                  result.errors.push({ row: rowNum, message: `Microtheme not found under theme: ${mName}` });
+                  continue;
+                }
+
+                const { data: qs, error: qErr } = await supabase
+                  .from("questions")
+                  .select("id")
+                  .eq("q_number", qNum)
+                  .in("paper_id", paperIds);
+                if (qErr) {
+                  result.errors.push({ row: rowNum, message: qErr.message });
+                  continue;
+                }
+                if (!qs || qs.length === 0) {
+                  result.errors.push({ row: rowNum, message: `Question not found: Q${qNum} in ${paperCode}` });
+                  continue;
+                }
+                const ids = qs.map((q) => q.id);
+                const { error: uErr } = await supabase
+                  .from("questions")
+                  .update({ theme_id: themeId, microtheme_id: microId })
+                  .in("id", ids);
+                if (uErr) {
+                  result.errors.push({ row: rowNum, message: uErr.message });
+                  continue;
+                }
+                result.created += ids.length;
+              }
+              qc.invalidateQueries({ queryKey: ["admin", "questions"] });
+              return result;
+            }}
+          />
+          <Button
+            disabled={!paperId}
+            onClick={() =>
+              setEditing({
+                q_number: (questionsQ.data?.length ?? 0) + 1,
+                text: "",
+                marks: 10,
+                word_limit: 150,
+              })
+            }
+          >
+            <Plus className="h-4 w-4 mr-1" /> New question
+          </Button>
+        </div>
       </div>
 
       {!paperId ? (
