@@ -94,7 +94,7 @@ export const generateMicrothemesForAllThemes = createServerFn({ method: "POST" }
     const { data: themes, error: tErr } = await supabase
       .from("themes")
       .select("id, name, paper")
-      .in("paper", ALLOWED_PAPERS as unknown as string[]);
+      .in("paper", [...ALLOWED_PAPERS]);
     if (tErr) throw new Error(tErr.message);
 
     const reports: ThemeReport[] = [];
