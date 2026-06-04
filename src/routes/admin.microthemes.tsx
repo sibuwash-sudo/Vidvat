@@ -220,6 +220,14 @@ function MicrothemesAdmin() {
             }}
           />
           <Button
+            variant="secondary"
+            onClick={() => generate.mutate()}
+            disabled={generate.isPending}
+          >
+            {generate.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
+            Generate UPSC Microthemes
+          </Button>
+          <Button
             onClick={() => setEditing({ name: "", theme_id: filterTheme !== "_all" ? filterTheme : "", description: "" })}
             disabled={!themesQ.data?.length}
           >
