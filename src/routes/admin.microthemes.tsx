@@ -324,6 +324,53 @@ function MicrothemesAdmin() {
           </div>
         )}
       </FormDialog>
+
+      <Dialog open={!!genReport} onOpenChange={(o) => !o && setGenReport(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Microtheme Generation Report</DialogTitle>
+          </DialogHeader>
+          {genReport && (
+            <div className="space-y-3 text-sm">
+              <div className="flex gap-4 text-xs">
+                <span className="text-green-600">Created: {genReport.reduce((a, r) => a + r.created, 0)}</span>
+                <span className="text-amber-600">Skipped (dupes): {genReport.reduce((a, r) => a + r.skipped, 0)}</span>
+                <span className="text-destructive">Errors: {genReport.filter((r) => r.error).length}</span>
+                <span className="text-muted-foreground">Themes: {genReport.length}</span>
+              </div>
+              <div className="max-h-96 overflow-auto border border-border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Theme</TableHead>
+                      <TableHead>Paper</TableHead>
+                      <TableHead className="text-right">Created</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {genReport.map((r) => (
+                      <TableRow key={r.theme_id}>
+                        <TableCell className="font-medium">{r.theme_name}</TableCell>
+                        <TableCell>{r.paper ?? "—"}</TableCell>
+                        <TableCell className="text-right">{r.created}</TableCell>
+                        <TableCell className="text-right">{r.total}</TableCell>
+                        <TableCell className={r.error ? "text-destructive text-xs" : "text-green-600 text-xs"}>
+                          {r.error ?? "OK"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setGenReport(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
