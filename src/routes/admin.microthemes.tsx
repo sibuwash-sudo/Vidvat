@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pencil, Trash2, Plus, Download } from "lucide-react";
+import { Pencil, Trash2, Plus, Download, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Field, FormDialog } from "@/components/admin/papers-admin";
-import { DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { CsvImportButton, type CsvImportResult, downloadCsv } from "@/components/admin/csv-import";
+import { generateMicrothemesForAllThemes, type ThemeReport } from "@/lib/generate-microthemes.functions";
 
 type Subject = { id: string; name: string; display_order: number };
 type Theme = {
