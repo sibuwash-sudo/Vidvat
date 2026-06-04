@@ -43,7 +43,7 @@ function MicrothemesAdmin() {
   const generateFn = useServerFn(generateMicrothemesForAllThemes);
 
   const generate = useMutation({
-    mutationFn: async () => generateFn({}),
+    mutationFn: async () => generateFn(),
     onSuccess: (res) => {
       setGenReport(res.reports);
       const created = res.reports.reduce((a, r) => a + r.created, 0);
