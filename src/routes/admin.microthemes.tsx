@@ -39,6 +39,21 @@ function MicrothemesAdmin() {
   const [editing, setEditing] = useState<Partial<Microtheme> | null>(null);
   const [filterSubject, setFilterSubject] = useState<string>("_all");
   const [filterTheme, setFilterTheme] = useState<string>("_all");
+  const [genReport, setGenReport] = useState<ThemeReport[] | null>(null);
+  const generateFn = useServerFn(generateMicrothemesForAllThemes);
+
+  const generate = useMutation({
+    mutationFn: async () => generateFn({}),
+    onSuccess: (res) => {
+      setGenReport(res.reports);
+      const created = res.reports.reduce((a, r) => a + r.created, 0);
+      const errors = res.reports.filter((r) => r.error).length;
+      toast.success(`Generated ${created} microthemes across ${res.reports.length} themes • ${errors} errors`);
+      qc.invalidateQueries({ queryKey: ["admin", "microthemes"] });
+      qc.invalidateQueries({ queryKey: ["admin-overview"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const subjectsQ = useQuery({
     queryKey: ["admin", "subjects"],
