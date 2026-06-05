@@ -394,7 +394,7 @@ function MicrothemesAdmin() {
       </Dialog>
 
       <Dialog open={!!previewReport} onOpenChange={(o) => !o && setPreviewReport(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-6xl">
           <DialogHeader>
             <DialogTitle>Preview — Generated Microthemes (Dry Run)</DialogTitle>
           </DialogHeader>
