@@ -41,7 +41,19 @@ function MicrothemesAdmin() {
   const [filterSubject, setFilterSubject] = useState<string>("_all");
   const [filterTheme, setFilterTheme] = useState<string>("_all");
   const [genReport, setGenReport] = useState<ThemeReport[] | null>(null);
+  const [previewReport, setPreviewReport] = useState<PreviewReport[] | null>(null);
   const generateFn = useServerFn(generateMicrothemesForAllThemes);
+  const previewFn = useServerFn(previewMicrothemesForSelectedThemes);
+
+  const preview = useMutation({
+    mutationFn: async () => previewFn(),
+    onSuccess: (res) => {
+      setPreviewReport(res.reports);
+      const total = res.reports.reduce((a, r) => a + r.count, 0);
+      toast.success(`Preview ready: ${total} new microthemes across ${res.reports.length} themes (no DB writes)`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const generate = useMutation({
     mutationFn: async () => generateFn(),
