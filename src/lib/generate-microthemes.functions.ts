@@ -170,3 +170,62 @@ export const generateMicrothemesForAllThemes = createServerFn({ method: "POST" }
 
     return { reports };
   });
+
+export const previewMicrothemesForSelectedThemes = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { data: isAdmin, error: roleErr } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    if (roleErr) throw new Error(roleErr.message);
+    if (!isAdmin) throw new Error("Admin access required");
+
+    const { data: themes, error: tErr } = await supabase
+      .from("themes")
+      .select("id, name, paper")
+      .in("name", [...PREVIEW_THEMES]);
+    if (tErr) throw new Error(tErr.message);
+
+    const reports: PreviewReport[] = [];
+
+    for (const t of themes ?? []) {
+      const r: PreviewReport = {
+        theme_id: t.id,
+        theme_name: t.name,
+        paper: t.paper,
+        microthemes: [],
+        count: 0,
+      };
+      try {
+        const { data: existing, error: eErr } = await supabase
+          .from("microthemes")
+          .select("name")
+          .eq("theme_id", t.id);
+        if (eErr) throw new Error(eErr.message);
+        const have = new Set((existing ?? []).map((m) => m.name.toLowerCase()));
+
+        const generated = await callAI(t.name, t.paper);
+        const seen = new Set<string>();
+        for (const m of generated) {
+          const key = m.name.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          r.microthemes.push({
+            name: m.name,
+            description: m.description,
+            duplicate: have.has(key),
+          });
+        }
+        r.count = r.microthemes.filter((m) => !m.duplicate).length;
+      } catch (e) {
+        r.error = e instanceof Error ? e.message : String(e);
+      }
+      reports.push(r);
+    }
+
+    return { reports };
+  });
+
