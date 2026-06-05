@@ -13,6 +13,23 @@ export type ThemeReport = {
 
 const ALLOWED_PAPERS = ["Essay", "GS1", "GS2", "GS3", "GS4"] as const;
 
+const PREVIEW_THEMES = [
+  "Agriculture",
+  "Governance",
+  "International Relations",
+  "Ethics",
+  "Indian Society",
+] as const;
+
+export type PreviewReport = {
+  theme_id: string;
+  theme_name: string;
+  paper: string | null;
+  microthemes: { name: string; description: string; duplicate: boolean }[];
+  count: number;
+  error?: string;
+};
+
 async function callAI(themeName: string, paper: string | null): Promise<{ name: string; description: string }[]> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
