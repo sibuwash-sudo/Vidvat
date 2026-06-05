@@ -13,7 +13,8 @@ import { toast } from "sonner";
 import { Field, FormDialog } from "@/components/admin/papers-admin";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { CsvImportButton, type CsvImportResult, downloadCsv } from "@/components/admin/csv-import";
-import { generateMicrothemesForAllThemes, type ThemeReport } from "@/lib/generate-microthemes.functions";
+import { generateMicrothemesForAllThemes, previewMicrothemesForSelectedThemes, type ThemeReport, type PreviewReport } from "@/lib/generate-microthemes.functions";
+import { Eye } from "lucide-react";
 
 type Subject = { id: string; name: string; display_order: number };
 type Theme = {
