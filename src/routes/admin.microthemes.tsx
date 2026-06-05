@@ -392,6 +392,53 @@ function MicrothemesAdmin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!previewReport} onOpenChange={(o) => !o && setPreviewReport(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Preview — Generated Microthemes (Dry Run)</DialogTitle>
+          </DialogHeader>
+          {previewReport && (
+            <div className="space-y-3 text-sm">
+              <div className="flex gap-4 text-xs flex-wrap">
+                <span className="text-muted-foreground">Themes: {previewReport.length}</span>
+                <span className="text-green-600">New to insert: {previewReport.reduce((a, r) => a + r.count, 0)}</span>
+                <span className="text-amber-600">Already exist: {previewReport.reduce((a, r) => a + r.microthemes.filter((m) => m.duplicate).length, 0)}</span>
+                <span className="text-destructive">Errors: {previewReport.filter((r) => r.error).length}</span>
+                <span className="italic text-muted-foreground">No database changes made.</span>
+              </div>
+              <div className="max-h-[28rem] overflow-auto space-y-4">
+                {previewReport.map((r) => (
+                  <div key={r.theme_id} className="border border-border rounded-md p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium">
+                        {r.theme_name} <span className="text-muted-foreground text-xs">[{r.paper ?? "—"}]</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">Count: {r.count}</div>
+                    </div>
+                    {r.error ? (
+                      <div className="text-destructive text-xs">{r.error}</div>
+                    ) : (
+                      <ul className="text-xs space-y-1">
+                        {r.microthemes.map((m, i) => (
+                          <li key={i} className={m.duplicate ? "text-muted-foreground line-through" : ""}>
+                            <span className="font-medium">{m.name}</span>
+                            {m.description ? <span className="text-muted-foreground"> — {m.description}</span> : null}
+                            {m.duplicate ? <span className="ml-1 text-amber-600">(exists)</span> : null}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPreviewReport(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
