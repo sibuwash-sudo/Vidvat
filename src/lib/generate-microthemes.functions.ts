@@ -34,18 +34,35 @@ async function callAI(themeName: string, paper: string | null): Promise<{ name: 
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 
-  const sys = `You are a senior UPSC Civil Services exam mentor. You design exam-oriented microthemes (subtopics) for given themes based on the official UPSC syllabus and PYQ (Previous Year Question) trends. Output only valid JSON.`;
+  const targets: Record<string, string> = {
+    GS1: "15-30",
+    GS2: "15-30",
+    GS3: "15-30",
+    GS4: "20-40",
+    Essay: "20-40",
+  };
+  const target = targets[paper ?? ""] ?? "15-30";
 
-  const user = `Generate between 10 and 30 high-quality, non-overlapping, exam-relevant microthemes for the following UPSC theme.
+  const sys = `You are a senior UPSC Civil Services Mains mentor and PYQ (Previous Year Questions) trend analyst. You design GRANULAR, syllabus-anchored microthemes derived from how UPSC actually frames questions across the last 15+ years. You decompose broad themes into the specific, recurring sub-concepts that appear in question stems. Output only valid JSON.`;
+
+  const user = `Generate ${target} HIGHLY GRANULAR, syllabus-oriented microthemes for the following UPSC theme, based on PYQ trend analysis.
 
 Paper: ${paper ?? "General"}
 Theme: ${themeName}
 
-Requirements:
-- Each microtheme must be a distinct, granular subtopic suitable for UPSC Mains preparation.
-- Cover the breadth of the theme as per UPSC syllabus and previous-year question patterns.
-- Avoid overlap or near-duplicates.
-- Keep names concise (2-7 words). Provide a 1-2 sentence exam-oriented description.
+METHOD — PYQ-driven decomposition:
+- Think about how UPSC has framed questions on this theme in Mains over the last 15+ years.
+- Break the theme into the SPECIFIC sub-concepts, values, phenomena, actors, instruments, or dimensions that recur in question stems.
+- Each microtheme must be a single, narrow, exam-answerable concept — NOT a chapter title or broad umbrella.
+
+STRICT RULES:
+- Microthemes must be SPECIFIC, NON-OVERLAPPING, and FREQUENTLY RECURRING in UPSC.
+- AVOID broad/umbrella phrasings like "Human Values", "Globalization and Indian Society", "Poverty Alleviation Strategies", "Good Governance Concept", "Role of X", "Issues in Y".
+- Decompose broad themes into atomic sub-points. Examples:
+  * "Human Values" -> Integrity, Objectivity, Compassion, Empathy, Dedication to Public Service, Tolerance, Courage of Conviction
+  * "Globalization and Indian Society" -> Cultural Homogenization, Consumerism, Family Transformation, Digital Social Change, Migration Effects, Youth Identity Crisis
+- Names: 2-6 words, concrete noun phrases. No "and", no slashes, no umbrella connectors.
+- Descriptions: 1-2 sentences explaining the exam angle / typical PYQ framing.
 
 Return ONLY a JSON object in this exact shape:
 {
