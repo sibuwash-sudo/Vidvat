@@ -394,7 +394,7 @@ function MicrothemesAdmin() {
       </Dialog>
 
       <Dialog open={!!previewReport} onOpenChange={(o) => !o && setPreviewReport(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-6xl">
           <DialogHeader>
             <DialogTitle>Preview — Generated Microthemes (Dry Run)</DialogTitle>
           </DialogHeader>
@@ -407,7 +407,7 @@ function MicrothemesAdmin() {
                 <span className="text-destructive">Errors: {previewReport.filter((r) => r.error).length}</span>
                 <span className="italic text-muted-foreground">No database changes made.</span>
               </div>
-              <div className="max-h-[28rem] overflow-auto space-y-4">
+              <div className="max-h-[32rem] overflow-auto space-y-4">
                 {previewReport.map((r) => (
                   <div key={r.theme_id} className="border border-border rounded-md p-3">
                     <div className="flex items-center justify-between mb-2">
@@ -419,15 +419,59 @@ function MicrothemesAdmin() {
                     {r.error ? (
                       <div className="text-destructive text-xs">{r.error}</div>
                     ) : (
-                      <ul className="text-xs space-y-1">
-                        {r.microthemes.map((m, i) => (
-                          <li key={i} className={m.duplicate ? "text-muted-foreground line-through" : ""}>
-                            <span className="font-medium">{m.name}</span>
-                            {m.description ? <span className="text-muted-foreground"> — {m.description}</span> : null}
-                            {m.duplicate ? <span className="ml-1 text-amber-600">(exists)</span> : null}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="border border-border rounded-md overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-48">Microtheme</TableHead>
+                              <TableHead>Syllabus Link</TableHead>
+                              <TableHead className="text-right w-20">PYQ Count</TableHead>
+                              <TableHead className="text-right w-24">Last Asked</TableHead>
+                              <TableHead>Sample Questions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {r.microthemes.map((m, i) => (
+                              <TableRow key={i} className={m.duplicate ? "opacity-60" : ""}>
+                                <TableCell className="align-top">
+                                  <div className="font-medium text-xs">
+                                    {m.name}
+                                    {m.duplicate ? <span className="ml-1 text-amber-600">(exists)</span> : null}
+                                  </div>
+                                  {m.description ? (
+                                    <div className="text-[11px] text-muted-foreground mt-0.5">{m.description}</div>
+                                  ) : null}
+                                </TableCell>
+                                <TableCell className="align-top text-xs text-muted-foreground">
+                                  {m.syllabus_link || "—"}
+                                  {m.keywords?.length ? (
+                                    <div className="mt-1 flex flex-wrap gap-1">
+                                      {m.keywords.map((k, j) => (
+                                        <span key={j} className="text-[10px] bg-muted px-1 rounded">{k}</span>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                </TableCell>
+                                <TableCell className="text-right align-top text-xs">{m.pyq_count}</TableCell>
+                                <TableCell className="text-right align-top text-xs">{m.last_asked ?? "—"}</TableCell>
+                                <TableCell className="align-top text-[11px]">
+                                  {m.sample_questions.length === 0 ? (
+                                    <span className="text-muted-foreground">No PYQ match</span>
+                                  ) : (
+                                    <ul className="space-y-1">
+                                      {m.sample_questions.map((q, j) => (
+                                        <li key={j}>
+                                          <span className="text-muted-foreground">[{q.year}]</span> {q.text}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
                     )}
                   </div>
                 ))}
