@@ -21,16 +21,34 @@ const PREVIEW_THEMES = [
   "Indian Society",
 ] as const;
 
+export type PreviewMicrotheme = {
+  name: string;
+  description: string;
+  duplicate: boolean;
+  syllabus_link: string;
+  keywords: string[];
+  pyq_count: number;
+  last_asked: number | null;
+  sample_questions: { year: number; text: string }[];
+};
+
 export type PreviewReport = {
   theme_id: string;
   theme_name: string;
   paper: string | null;
-  microthemes: { name: string; description: string; duplicate: boolean }[];
+  microthemes: PreviewMicrotheme[];
   count: number;
   error?: string;
 };
 
-async function callAI(themeName: string, paper: string | null): Promise<{ name: string; description: string }[]> {
+type GeneratedItem = {
+  name: string;
+  description: string;
+  syllabus_link?: string;
+  keywords?: string[];
+};
+
+async function callAI(themeName: string, paper: string | null): Promise<GeneratedItem[]> {
   const apiKey = process.env.LOVABLE_API_KEY;
   if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -58,16 +76,15 @@ METHOD — PYQ-driven decomposition:
 STRICT RULES:
 - Microthemes must be SPECIFIC, NON-OVERLAPPING, and FREQUENTLY RECURRING in UPSC.
 - AVOID broad/umbrella phrasings like "Human Values", "Globalization and Indian Society", "Poverty Alleviation Strategies", "Good Governance Concept", "Role of X", "Issues in Y".
-- Decompose broad themes into atomic sub-points. Examples:
-  * "Human Values" -> Integrity, Objectivity, Compassion, Empathy, Dedication to Public Service, Tolerance, Courage of Conviction
-  * "Globalization and Indian Society" -> Cultural Homogenization, Consumerism, Family Transformation, Digital Social Change, Migration Effects, Youth Identity Crisis
 - Names: 2-6 words, concrete noun phrases. No "and", no slashes, no umbrella connectors.
 - Descriptions: 1-2 sentences explaining the exam angle / typical PYQ framing.
+- syllabus_link: the EXACT UPSC Mains syllabus phrase this maps to (verbatim from the official ${paper ?? "GS"} syllabus).
+- keywords: 3-6 short search terms (single words or 2-word phrases, lowercase) likely to appear in real PYQ stems on this microtheme. Used to match historical questions.
 
 Return ONLY a JSON object in this exact shape:
 {
   "microthemes": [
-    { "name": "string", "description": "string" }
+    { "name": "string", "description": "string", "syllabus_link": "string", "keywords": ["string", "string"] }
   ]
 }`;
 
@@ -108,6 +125,10 @@ Return ONLY a JSON object in this exact shape:
     .map((m: any) => ({
       name: String(m?.name ?? "").trim(),
       description: String(m?.description ?? "").trim(),
+      syllabus_link: String(m?.syllabus_link ?? "").trim(),
+      keywords: Array.isArray(m?.keywords)
+        ? m.keywords.map((k: any) => String(k).trim().toLowerCase()).filter(Boolean)
+        : [],
     }))
     .filter((m: any) => m.name.length > 0);
 }
@@ -117,7 +138,6 @@ export const generateMicrothemesForAllThemes = createServerFn({ method: "POST" }
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
 
-    // Admin-only
     const { data: isAdmin, error: roleErr } = await supabase.rpc("has_role", {
       _user_id: userId,
       _role: "admin",
@@ -224,16 +244,58 @@ export const previewMicrothemesForSelectedThemes = createServerFn({ method: "POS
         if (eErr) throw new Error(eErr.message);
         const have = new Set((existing ?? []).map((m) => m.name.toLowerCase()));
 
+        // Fetch PYQs for this paper (one shot, then match locally)
+        type PYQRow = { text: string; year: number };
+        let pyqs: PYQRow[] = [];
+        if (t.paper) {
+          const { data: paperRows } = await supabase
+            .from("papers")
+            .select("id, year")
+            .eq("paper", t.paper);
+          const yearById = new Map<string, number>();
+          (paperRows ?? []).forEach((p: any) => yearById.set(p.id, p.year));
+          const paperIds = (paperRows ?? []).map((p: any) => p.id);
+          if (paperIds.length > 0) {
+            const { data: qRows } = await supabase
+              .from("questions")
+              .select("text, paper_id")
+              .in("paper_id", paperIds);
+            pyqs = (qRows ?? []).map((q: any) => ({
+              text: q.text as string,
+              year: yearById.get(q.paper_id) ?? 0,
+            }));
+          }
+        }
+
         const generated = await callAI(t.name, t.paper);
         const seen = new Set<string>();
         for (const m of generated) {
           const key = m.name.toLowerCase();
           if (seen.has(key)) continue;
           seen.add(key);
+
+          // Match PYQs by keyword inclusion (case-insensitive)
+          const kws = (m.keywords ?? []).filter((k) => k.length >= 3);
+          const matched = pyqs.filter((q) => {
+            const lower = q.text.toLowerCase();
+            return kws.some((k) => lower.includes(k));
+          });
+          matched.sort((a, b) => b.year - a.year);
+          const sample = matched.slice(0, 3).map((q) => ({
+            year: q.year,
+            text: q.text.length > 220 ? q.text.slice(0, 217) + "…" : q.text,
+          }));
+          const lastAsked = matched.length > 0 ? matched[0].year : null;
+
           r.microthemes.push({
             name: m.name,
             description: m.description,
             duplicate: have.has(key),
+            syllabus_link: m.syllabus_link ?? "",
+            keywords: kws,
+            pyq_count: matched.length,
+            last_asked: lastAsked,
+            sample_questions: sample,
           });
         }
         r.count = r.microthemes.filter((m) => !m.duplicate).length;
@@ -245,4 +307,3 @@ export const previewMicrothemesForSelectedThemes = createServerFn({ method: "POS
 
     return { reports };
   });
-
