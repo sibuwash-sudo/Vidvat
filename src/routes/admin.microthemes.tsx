@@ -233,6 +233,14 @@ function MicrothemesAdmin() {
             }}
           />
           <Button
+            variant="outline"
+            onClick={() => preview.mutate()}
+            disabled={preview.isPending}
+          >
+            {preview.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Eye className="h-4 w-4 mr-1" />}
+            Preview Generated Microthemes
+          </Button>
+          <Button
             variant="secondary"
             onClick={() => generate.mutate()}
             disabled={generate.isPending}
