@@ -20,6 +20,7 @@ import { Route as AdminToppersRouteImport } from './routes/admin.toppers'
 import { Route as AdminThemesRouteImport } from './routes/admin.themes'
 import { Route as AdminTagsRouteImport } from './routes/admin.tags'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
+import { Route as AdminPyqImportRouteImport } from './routes/admin.pyq-import'
 import { Route as AdminPapersRouteImport } from './routes/admin.papers'
 import { Route as AdminMicrothemesRouteImport } from './routes/admin.microthemes'
 
@@ -78,6 +79,11 @@ const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
   path: '/questions',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPyqImportRoute = AdminPyqImportRouteImport.update({
+  id: '/pyq-import',
+  path: '/pyq-import',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPapersRoute = AdminPapersRouteImport.update({
   id: '/papers',
   path: '/papers',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/papers': typeof PapersRouteWithChildren
   '/admin/microthemes': typeof AdminMicrothemesRoute
   '/admin/papers': typeof AdminPapersRoute
+  '/admin/pyq-import': typeof AdminPyqImportRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/tags': typeof AdminTagsRoute
   '/admin/themes': typeof AdminThemesRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/papers': typeof PapersRouteWithChildren
   '/admin/microthemes': typeof AdminMicrothemesRoute
   '/admin/papers': typeof AdminPapersRoute
+  '/admin/pyq-import': typeof AdminPyqImportRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/tags': typeof AdminTagsRoute
   '/admin/themes': typeof AdminThemesRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/papers': typeof PapersRouteWithChildren
   '/admin/microthemes': typeof AdminMicrothemesRoute
   '/admin/papers': typeof AdminPapersRoute
+  '/admin/pyq-import': typeof AdminPyqImportRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/tags': typeof AdminTagsRoute
   '/admin/themes': typeof AdminThemesRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/papers'
     | '/admin/microthemes'
     | '/admin/papers'
+    | '/admin/pyq-import'
     | '/admin/questions'
     | '/admin/tags'
     | '/admin/themes'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/papers'
     | '/admin/microthemes'
     | '/admin/papers'
+    | '/admin/pyq-import'
     | '/admin/questions'
     | '/admin/tags'
     | '/admin/themes'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/papers'
     | '/admin/microthemes'
     | '/admin/papers'
+    | '/admin/pyq-import'
     | '/admin/questions'
     | '/admin/tags'
     | '/admin/themes'
@@ -268,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQuestionsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/pyq-import': {
+      id: '/admin/pyq-import'
+      path: '/pyq-import'
+      fullPath: '/admin/pyq-import'
+      preLoaderRoute: typeof AdminPyqImportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/papers': {
       id: '/admin/papers'
       path: '/papers'
@@ -288,6 +307,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminMicrothemesRoute: typeof AdminMicrothemesRoute
   AdminPapersRoute: typeof AdminPapersRoute
+  AdminPyqImportRoute: typeof AdminPyqImportRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminTagsRoute: typeof AdminTagsRoute
   AdminThemesRoute: typeof AdminThemesRoute
@@ -298,6 +318,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminMicrothemesRoute: AdminMicrothemesRoute,
   AdminPapersRoute: AdminPapersRoute,
+  AdminPyqImportRoute: AdminPyqImportRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminTagsRoute: AdminTagsRoute,
   AdminThemesRoute: AdminThemesRoute,
